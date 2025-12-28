@@ -79,9 +79,14 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true };
     } catch (error) {
+      console.error('Registration error:', error);
+      const errorMessage = error.response?.data?.message || 
+                            error.response?.data?.error || 
+                            error.message || 
+                            'Registration failed. Please check if the server is running and MongoDB is connected.';
       return {
         success: false,
-        message: error.response?.data?.message || 'Registration failed',
+        message: errorMessage,
       };
     }
   };

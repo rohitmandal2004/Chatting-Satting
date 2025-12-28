@@ -4,7 +4,7 @@ import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { formatTime } from '../utils/dateUtils';
 
-const ChatWindow = ({ selectedChat }) => {
+const ChatWindow = ({ selectedChat, onBack }) => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -133,19 +133,31 @@ const ChatWindow = ({ selectedChat }) => {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-whatsapp-gray">
+    <div className="flex-1 flex flex-col bg-whatsapp-gray h-full">
       {/* Chat Header */}
-      <div className="bg-whatsapp-dark p-4 flex items-center space-x-3">
-        <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-semibold">
+      <div className="bg-whatsapp-dark p-3 md:p-4 flex items-center space-x-2 md:space-x-3 flex-shrink-0">
+        {/* Mobile back button */}
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="md:hidden text-white hover:text-gray-200 p-2 rounded transition -ml-2"
+            title="Back"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        )}
+        <div className="relative flex-shrink-0">
+          <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-whatsapp-green flex items-center justify-center text-white font-semibold text-sm md:text-base">
             {selectedChat.otherUser?.name?.charAt(0).toUpperCase() || 'C'}
           </div>
           {selectedChat.otherUser?.isOnline && (
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white"></div>
           )}
         </div>
-        <div>
-          <p className="text-white font-semibold">
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-semibold text-sm md:text-base truncate">
             {selectedChat.otherUser?.name || 'Chat'}
           </p>
           <p className="text-xs text-gray-200">
@@ -155,7 +167,7 @@ const ChatWindow = ({ selectedChat }) => {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-gray-500">Loading messages...</div>
@@ -173,7 +185,7 @@ const ChatWindow = ({ selectedChat }) => {
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`max-w-[75%] sm:max-w-xs md:max-w-sm lg:max-w-md px-3 md:px-4 py-2 rounded-lg ${
                     isOwnMessage
                       ? 'bg-whatsapp-green text-white'
                       : 'bg-white text-gray-800'
@@ -184,7 +196,7 @@ const ChatWindow = ({ selectedChat }) => {
                       {message.sender.name}
                     </p>
                   )}
-                  <p className="break-words">{message.content}</p>
+                  <p className="break-words text-sm md:text-base">{message.content}</p>
                   <p
                     className={`text-xs mt-1 ${
                       isOwnMessage ? 'text-white opacity-75' : 'text-gray-500'
@@ -212,21 +224,24 @@ const ChatWindow = ({ selectedChat }) => {
       </div>
 
       {/* Message Input */}
-      <div className="p-4 bg-white border-t border-gray-300">
+      <div className="p-3 md:p-4 bg-white border-t border-gray-300 flex-shrink-0">
         <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
           <input
             type="text"
             value={newMessage}
             onChange={handleTyping}
             placeholder="Type a message..."
-            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
+            className="flex-1 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-whatsapp-green"
           />
           <button
             type="submit"
             disabled={!newMessage.trim()}
-            className="bg-whatsapp-green hover:bg-whatsapp-dark text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-whatsapp-green hover:bg-whatsapp-dark text-white px-4 md:px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base font-semibold"
           >
-            Send
+            <span className="hidden sm:inline">Send</span>
+            <svg className="sm:hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </button>
         </form>
       </div>

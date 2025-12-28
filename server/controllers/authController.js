@@ -57,8 +57,27 @@ export const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
+    
+    // Handle Mongoose validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        message: errors.join(', '),
+        error: error.message,
+      });
+    }
+    
+    // Handle duplicate key error (email already exists)
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: 'User with this email already exists',
+        error: 'Duplicate email',
+      });
+    }
+    
+    // Handle other errors
     res.status(500).json({
-      message: 'Error registering user',
+      message: error.message || 'Error registering user',
       error: error.message,
     });
   }
