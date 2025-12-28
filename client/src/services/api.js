@@ -1,12 +1,60 @@
 import axios from 'axios';
 
-// Use environment variable for production, fallback to proxy for development
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+/**
+ * API Configuration
+ * In production: Uses VITE_API_URL environment variable
+ * In development: Uses proxy from vite.config.js (/api)
+ */
 
-// Configure axios base URL if provided
-if (import.meta.env.VITE_API_URL) {
-  axios.defaults.baseURL = import.meta.env.VITE_API_URL;
-}
+// Get API base URL from environment or use proxy
+const getApiUrl = () => {
+  // In production, VITE_API_URL must be set
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // In development, use proxy
+  if (import.meta.env.DEV) {
+    return '/api';
+  }
+  
+  // Fallback: throw error if in production without API URL
+  console.error('VITE_API_URL is not set! Please configure it in Vercel environment variables.');
+  return '/api'; // Will fail, but prevents build errors
+};
+
+const API_URL = getApiUrl();
+
+// Configure axios defaults
+axios.defaults.timeout = 30000; // 30 second timeout
+axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+// Add request interceptor for auth token
+axios.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+axios.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token on 401
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 /**
  * API service

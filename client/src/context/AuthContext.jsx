@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }) => {
   // Fetch current user from API
   const fetchUser = async () => {
     try {
-      const response = await axios.get('/api/auth/me');
+      const response = await authAPI.getMe();
       setUser(response.data.user);
     } catch (error) {
       console.error('Error fetching user:', error);
@@ -45,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      const response = await axios.post('/api/auth/login', { email, password });
+      const response = await authAPI.login(email, password);
       const { user, token } = response.data;
       
       localStorage.setItem('token', token);
@@ -65,11 +66,7 @@ export const AuthProvider = ({ children }) => {
   // Register function
   const register = async (name, email, password) => {
     try {
-      const response = await axios.post('/api/auth/register', {
-        name,
-        email,
-        password,
-      });
+      const response = await authAPI.register(name, email, password);
       const { user, token } = response.data;
       
       localStorage.setItem('token', token);
