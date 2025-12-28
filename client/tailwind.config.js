@@ -7,12 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // WhatsApp-inspired color palette
+        // WhatsApp Web exact color palette
         'whatsapp-green': '#25D366',
-        'whatsapp-dark': '#128C7E',
-        'whatsapp-darker': '#075E54',
-        'whatsapp-light': '#DCF8C6',
-        'whatsapp-gray': '#ECE5DD',
+        'whatsapp-dark': '#202C33',
+        'whatsapp-darker': '#111B21',
+        'whatsapp-light': '#D9FDD3',
+        'whatsapp-gray': '#EFEAE2',
+        'whatsapp-header': '#202C33',
       },
     },
   },

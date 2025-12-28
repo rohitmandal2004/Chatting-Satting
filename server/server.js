@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import { initializeSocket } from './socket/socketHandlers.js';
 
 // Load environment variables
@@ -18,10 +19,23 @@ const PORT = process.env.PORT || 5000;
 // Create HTTP server (needed for Socket.IO)
 const httpServer = createServer(app);
 
-// Initialize Socket.IO
+// Initialize Socket.IO with production-ready CORS
+const allowedOrigins = process.env.CLIENT_URL
+  ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+  : ['http://localhost:5173'];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -30,11 +44,28 @@ const io = new Server(httpServer, {
 // Connect to MongoDB
 connectDB();
 
-// Middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+// Middleware - Production-ready CORS
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = process.env.CLIENT_URL
+      ? process.env.CLIENT_URL.split(',').map(url => url.trim())
+      : ['http://localhost:5173'];
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
-}));
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
@@ -49,6 +80,7 @@ app.get('/', (req, res) => {
 // API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Initialize Socket.IO handlers
 initializeSocket(io);

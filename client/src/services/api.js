@@ -1,6 +1,12 @@
 import axios from 'axios';
 
-const API_URL = '/api';
+// Use environment variable for production, fallback to proxy for development
+const API_URL = import.meta.env.VITE_API_URL || '/api';
+
+// Configure axios base URL if provided
+if (import.meta.env.VITE_API_URL) {
+  axios.defaults.baseURL = import.meta.env.VITE_API_URL;
+}
 
 /**
  * API service
@@ -30,7 +36,28 @@ export const chatAPI = {
   getOrCreateChat: (userId) =>
     axios.get(`${API_URL}/chat/${userId}`),
   
-  getChatMessages: (chatId) =>
-    axios.get(`${API_URL}/chat/${chatId}/messages`),
+  getChatMessages: (chatId, page = 1, limit = 50) =>
+    axios.get(`${API_URL}/chat/${chatId}/messages`, {
+      params: { page, limit },
+    }),
+};
+
+// Profile APIs
+export const profileAPI = {
+  getProfile: () =>
+    axios.get(`${API_URL}/profile`),
+  
+  updateProfile: (data) =>
+    axios.put(`${API_URL}/profile`, data),
+  
+  updateProfilePicture: (formData) =>
+    axios.put(`${API_URL}/profile/picture`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+  
+  deleteProfilePicture: () =>
+    axios.delete(`${API_URL}/profile/picture`),
 };
 

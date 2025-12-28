@@ -31,9 +31,15 @@ const userSchema = new mongoose.Schema(
       minlength: [6, 'Password must be at least 6 characters'],
       select: false, // Don't return password by default in queries
     },
-    avatar: {
+    profilePic: {
       type: String,
-      default: '', // Will store URL or path to avatar image
+      default: '', // Cloudinary URL for profile picture
+    },
+    about: {
+      type: String,
+      default: 'Hey there! I am using Chating Buddy',
+      maxlength: [100, 'About cannot exceed 100 characters'],
+      trim: true,
     },
     isOnline: {
       type: Boolean,

@@ -67,7 +67,7 @@ export const initializeSocket = (io) => {
         });
 
         // Populate sender info
-        await message.populate('sender', 'name email avatar');
+        await message.populate('sender', 'name email profilePic');
 
         // Update chat's last message
         await Chat.findByIdAndUpdate(chatId, {
@@ -75,11 +75,36 @@ export const initializeSocket = (io) => {
           lastMessageAt: message.createdAt,
         });
 
+        // Get chat participants to determine delivery status
+        const chat = await Chat.findById(chatId).populate('participants');
+        const recipientId = chat.participants.find(p => p._id.toString() !== senderId)?._id;
+
+        // Update message status to 'delivered' if recipient is online
+        if (recipientId) {
+          const recipientSocketId = onlineUsers.get(recipientId.toString());
+          if (recipientSocketId) {
+            message.status = 'delivered';
+            await message.save();
+          }
+        }
+
         // Emit to all users in this chat room
         io.to(chatId).emit('message:receive', {
           message,
           chatId,
         });
+
+        // Emit delivery status to sender if recipient is online
+        const senderSocketId = onlineUsers.get(senderId);
+        if (senderSocketId && recipientId) {
+          const recipientSocketId = onlineUsers.get(recipientId.toString());
+          if (recipientSocketId) {
+            io.to(senderSocketId).emit('message:delivered', {
+              messageId: message._id,
+              chatId,
+            });
+          }
+        }
 
         console.log(`📨 Message sent in chat ${chatId}`);
       } catch (error) {
@@ -109,19 +134,30 @@ export const initializeSocket = (io) => {
       try {
         const { messageId, userId, chatId } = data;
 
-        await Message.findByIdAndUpdate(messageId, {
-          $addToSet: {
-            readBy: {
-              user: userId,
-              readAt: new Date(),
+        const message = await Message.findByIdAndUpdate(
+          messageId,
+          {
+            $addToSet: {
+              readBy: {
+                user: userId,
+                readAt: new Date(),
+              },
+            },
+            $set: {
+              isRead: true,
+              status: 'read',
             },
           },
-          isRead: true,
-        });
+          { new: true }
+        );
+
+        if (!message) {
+          return;
+        }
 
         // Notify sender that message was read
-        const message = await Message.findById(messageId);
         const chat = await Chat.findById(chatId).populate('participants');
+        const senderId = message.sender.toString();
 
         chat.participants.forEach((participant) => {
           const participantSocketId = onlineUsers.get(participant._id.toString());
@@ -129,6 +165,7 @@ export const initializeSocket = (io) => {
             io.to(participantSocketId).emit('message:read', {
               messageId,
               userId,
+              chatId,
             });
           }
         });

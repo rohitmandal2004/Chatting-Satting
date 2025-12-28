@@ -30,7 +30,7 @@ export const getOrCreateChat = async (req, res) => {
     let chat = await Chat.findOne({
       participants: { $all: [currentUserId, userId], $size: 2 },
     })
-      .populate('participants', 'name email avatar isOnline')
+      .populate('participants', 'name email profilePic about isOnline lastSeen')
       .populate('lastMessage');
 
     // Create new chat if doesn't exist
@@ -39,7 +39,7 @@ export const getOrCreateChat = async (req, res) => {
       chat = await Chat.findOne({
         participants: { $all: [currentUserId, userId], $size: 2 },
       })
-        .populate('participants', 'name email avatar isOnline')
+        .populate('participants', 'name email profilePic about isOnline lastSeen')
         .populate('lastMessage');
 
       if (!chat) {
@@ -48,7 +48,7 @@ export const getOrCreateChat = async (req, res) => {
         });
 
         chat = await Chat.findById(chat._id)
-          .populate('participants', 'name email avatar isOnline');
+          .populate('participants', 'name email profilePic about isOnline lastSeen');
       }
     }
 
@@ -73,7 +73,7 @@ export const getUserChats = async (req, res) => {
     const chats = await Chat.find({
       participants: userId,
     })
-      .populate('participants', 'name email avatar isOnline')
+      .populate('participants', 'name email profilePic about isOnline lastSeen')
       .populate('lastMessage')
       .sort({ lastMessageAt: -1 });
 
@@ -89,7 +89,8 @@ export const getUserChats = async (req, res) => {
           _id: otherUser._id,
           name: otherUser.name,
           email: otherUser.email,
-          avatar: otherUser.avatar,
+          profilePic: otherUser.profilePic,
+          about: otherUser.about,
           isOnline: otherUser.isOnline,
         },
         lastMessage: chat.lastMessage,
@@ -131,12 +132,33 @@ export const getChatMessages = async (req, res) => {
       });
     }
 
-    // Get messages
-    const messages = await Message.find({ chat: chatId })
-      .populate('sender', 'name email avatar')
-      .sort({ createdAt: 1 });
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const skip = (page - 1) * limit;
 
-    res.status(200).json({ messages });
+    // Get messages with pagination (newest first, then reverse for display)
+    const totalMessages = await Message.countDocuments({ chat: chatId });
+    
+    const messages = await Message.find({ chat: chatId })
+      .populate('sender', 'name email profilePic')
+      .sort({ createdAt: -1 }) // Get newest first
+      .limit(limit)
+      .skip(skip)
+      .lean();
+
+    // Reverse to show oldest first in chat
+    messages.reverse();
+
+    res.status(200).json({
+      messages,
+      pagination: {
+        page,
+        limit,
+        total: totalMessages,
+        pages: Math.ceil(totalMessages / limit),
+      },
+    });
   } catch (error) {
     console.error('Get chat messages error:', error);
     res.status(500).json({
@@ -156,7 +178,7 @@ export const getUsers = async (req, res) => {
 
     const users = await User.find({
       _id: { $ne: currentUserId },
-    }).select('name email avatar isOnline lastSeen');
+    }).select('name email profilePic about isOnline lastSeen');
 
     res.status(200).json({ users });
   } catch (error) {

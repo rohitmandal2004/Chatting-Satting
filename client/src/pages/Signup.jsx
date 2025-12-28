@@ -20,12 +20,14 @@ const Signup = () => {
     const result = await register(name, email, password);
 
     if (result.success) {
-      navigate('/chat');
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        navigate('/chat', { replace: true });
+      }, 100);
     } else {
       setError(result.message);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
