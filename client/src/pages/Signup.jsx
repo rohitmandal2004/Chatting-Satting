@@ -35,7 +35,7 @@ const Signup = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-whatsapp-dark mb-2">
             Create Account
           </h1>
-          <p className="text-sm md:text-base text-gray-600">Join WhatsApp Chat</p>
+          <p className="text-sm md:text-base text-gray-600">Join Chating Buddy</p>
         </div>
 
         {error && (

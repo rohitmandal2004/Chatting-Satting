@@ -11,6 +11,15 @@ const Sidebar = ({ user, logout, selectedChat, setSelectedChat, onClose }) => {
   const [showUsers, setShowUsers] = useState(false);
   const { socket } = useSocket();
 
+  // Safety check
+  if (!user) {
+    return (
+      <div className="w-full md:w-1/3 lg:w-1/4 bg-white border-r border-gray-300 flex flex-col h-full items-center justify-center">
+        <div className="text-gray-500">Loading user...</div>
+      </div>
+    );
+  }
+
   // Fetch user chats
   useEffect(() => {
     fetchChats();

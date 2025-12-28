@@ -41,7 +41,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 // Basic route for health check
 app.get('/', (req, res) => {
   res.json({ 
-    message: 'WhatsApp Chat API is running! 🚀',
+    message: 'Chating Buddy API is running! 🚀',
     status: 'healthy'
   });
 });

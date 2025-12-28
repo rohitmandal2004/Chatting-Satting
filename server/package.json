@@ -1,7 +1,7 @@
 {
   "name": "whatsapp-chat-server",
   "version": "1.0.0",
-  "description": "Backend server for WhatsApp-like chat application",
+  "description": "Backend server for Chating Buddy chat application",
   "main": "server.js",
   "type": "module",
   "scripts": {

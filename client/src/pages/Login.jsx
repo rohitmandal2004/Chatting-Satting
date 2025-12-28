@@ -32,7 +32,7 @@ const Login = () => {
       <div className="bg-white p-6 md:p-8 rounded-lg shadow-2xl w-full max-w-md">
         <div className="text-center mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-whatsapp-dark mb-2">
-            WhatsApp Chat
+            Chating Buddy
           </h1>
           <p className="text-sm md:text-base text-gray-600">Sign in to continue</p>
         </div>
